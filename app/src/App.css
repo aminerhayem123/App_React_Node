@@ -1,3 +1,4 @@
+/* App.css */
 .login-container {
   display: flex;
   justify-content: center; /* Center horizontally */
@@ -41,9 +42,33 @@
 
 .error-message {
   color: red;
-  margin-top: 10px;
-}
-.error-message {
-  color: red;
   margin-bottom: 10px; /* Add margin to separate from the email field */
+}
+/* App.css */
+.dashboard {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  flex: 0 0 250px; /* Sidebar width */
+  background-color: #f8f9fa; /* Sidebar background color */
+  padding: 20px;
+}
+
+.sidebar .nav-link {
+  padding: 10px 20px;
+  color: #000; /* Sidebar link color */
+}
+
+.content {
+  flex: 1; /* Content area takes remaining space */
+  padding: 20px;
+}
+
+.auth-wrapper {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }

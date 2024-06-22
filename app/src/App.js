@@ -1,10 +1,11 @@
 // App.js
-
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/login.component';
 import Dashboard from './components/dashboard.component';
+import Items from './components/items.component';
+import Packs from './components/packs.component';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -45,42 +46,23 @@ function App() {
   return (
     <Router>
       <div className="App">
-        {isLoggedIn && (
-          <nav className="navbar navbar-expand-lg navbar-light bg-light fixed-top">
-            <div className="container">
-              <Link className="navbar-brand" to="/">
-                positronX
-              </Link>
-              <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
-                <ul className="navbar-nav ml-auto">
-                  <li className="nav-item">
-                    <button className="nav-link btn btn-link" onClick={handleLogout}>
-                      Logout
-                    </button>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </nav>
-        )}
-        <div className="auth-wrapper">
-          <div className="auth-inner">
-            <Routes>
-              <Route
-                exact
-                path="/"
-                element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />}
-              />
-              <Route
-                path="/login"
-                element={isLoggedIn ? <Navigate to="/" /> : <Login handleLogin={handleLogin} />}
-              />
-            </Routes>
-          </div>
-        </div>
+        <Routes>
+          <Route  
+            exact
+            path="/"
+            element={isLoggedIn ? <Dashboard handleLogout={handleLogout} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/login"
+            element={isLoggedIn ? <Navigate to="/" /> : <Login handleLogin={handleLogin} />}
+          />
+          <Route path="/items" element={isLoggedIn ? <Items /> : <Navigate to="/login" />} />
+          <Route path="/packs" element={isLoggedIn ? <Packs /> : <Navigate to="/login" />} />
+        </Routes>
       </div>
     </Router>
   );
 }
 
 export default App;
+

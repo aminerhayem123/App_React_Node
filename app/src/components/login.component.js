@@ -1,6 +1,6 @@
-// login.component.js
-
+// components/login.component.js
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function Login({ handleLogin }) {
   const [email, setEmail] = useState('');
@@ -16,34 +16,39 @@ function Login({ handleLogin }) {
   };
 
   return (
-    <div>
-      <h3>Sign In</h3>
-      {error && <div className="alert alert-danger" style={{ marginBottom: '10px', color: 'red' }}>{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label>Email address</label>
-          <input
-            type="email"
-            className="form-control"
-            placeholder="Enter email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+    <div className="login-container">
+      <div className="login-form">
+        <h2>Login</h2>
+        {error && <div className="error-message">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email address</label>
+            <input
+              type="email"
+              className="form-control"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              className="form-control"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          <button type="submit" className="btn-primary">Login</button>
+        </form>
+        <div>
+          <br></br><Link to="/register">Forgot Password?</Link>
         </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            type="password"
-            className="form-control"
-            placeholder="Enter password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
-        <button type="submit" className="btn btn-primary btn-block">
-          Submit
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
