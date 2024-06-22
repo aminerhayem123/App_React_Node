@@ -1,7 +1,5 @@
-// App.js
 import React, { useState, useEffect } from 'react';
-import './App.css';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/login.component';
 import Dashboard from './components/dashboard.component';
 import Items from './components/items.component';
@@ -47,7 +45,7 @@ function App() {
     <Router>
       <div className="App">
         <Routes>
-          <Route  
+          <Route
             exact
             path="/"
             element={isLoggedIn ? <Dashboard handleLogout={handleLogout} /> : <Navigate to="/login" />}
@@ -56,8 +54,14 @@ function App() {
             path="/login"
             element={isLoggedIn ? <Navigate to="/" /> : <Login handleLogin={handleLogin} />}
           />
-          <Route path="/items" element={isLoggedIn ? <Items /> : <Navigate to="/login" />} />
-          <Route path="/packs" element={isLoggedIn ? <Packs /> : <Navigate to="/login" />} />
+          <Route
+            path="/items"
+            element={isLoggedIn ? <Items handleLogout={handleLogout} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/packs"
+            element={isLoggedIn ? <Packs handleLogout={handleLogout} /> : <Navigate to="/login" />}
+          />
         </Routes>
       </div>
     </Router>
@@ -65,4 +69,3 @@ function App() {
 }
 
 export default App;
-

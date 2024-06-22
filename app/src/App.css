@@ -1,74 +1,85 @@
-/* App.css */
+/* Global styles */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Login component styles */
 .login-container {
   display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  height: 100vh;
-  background-color: #f0f2f5;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  display: flex;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 800px; /* Adjust the maximum width as needed */
+  width: 100%;
+}
+
+.login-image {
+  flex: 0 0 40%; /* 40% width, do not grow or shrink */
+  padding-right: 20px; /* Space between image and form */
+}
+
+.login-image img {
+  width: 100%;
+  height: auto;
 }
 
 .login-form {
-  width: 300px;
-  padding: 20px;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  flex: 1; /* Take up remaining space */
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 }
 
 .form-control {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ced4da;
+  border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 .btn-primary {
-  width: 100%;
-  padding: 10px;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: #ffffff;
+  background-color: #0093AF;
+  color: white;
   border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background-color: #0056b3;
+  background-color: #81D8D0;
 }
 
 .error-message {
   color: red;
-  margin-bottom: 10px; /* Add margin to separate from the email field */
-}
-/* App.css */
-.dashboard {
-  display: flex;
-  height: 100vh;
+  margin-bottom: 20px;
 }
 
-.sidebar {
-  flex: 0 0 250px; /* Sidebar width */
-  background-color: #f8f9fa; /* Sidebar background color */
-  padding: 20px;
-}
 
-.sidebar .nav-link {
-  padding: 10px 20px;
-  color: #000; /* Sidebar link color */
-}
+/* Media queries for responsiveness */
+@media only screen and (max-width: 768px) {
+  .login-card {
+    flex-direction: column;
+  }
 
-.content {
-  flex: 1; /* Content area takes remaining space */
-  padding: 20px;
-}
+  .login-image {
+    flex: 1;
+    padding-right: 0;
+    padding-bottom: 20px;
+  }
 
-.auth-wrapper {
-  background-color: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  .login-form {
+    flex: 1;
+  }
 }
