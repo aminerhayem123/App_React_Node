@@ -4,6 +4,7 @@ import Login from './components/login.component';
 import Dashboard from './components/dashboard.component';
 import Items from './components/items.component';
 import Packs from './components/packs.component';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

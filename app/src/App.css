@@ -20,7 +20,7 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   max-width: 800px; /* Adjust the maximum width as needed */
-  width: 100%;
+  width:50%;
 }
 
 .login-image {

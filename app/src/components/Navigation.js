@@ -7,7 +7,9 @@ const Sidebar = ({ handleLogout }) => {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        <h3>Admin Dashboard</h3>
+      <Nav.Link as={Link} to="/">
+          <h3>Admin Dashboard</h3>
+        </Nav.Link>
       </div>
       <Nav className="flex-column">
         <Nav.Item>

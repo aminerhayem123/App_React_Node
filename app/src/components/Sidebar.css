@@ -6,6 +6,7 @@
   left: 0;
   background-color: #81D8D0;
   padding-top: 20px;
+  z-index: 1; /* Ensure sidebar is above other content */
 }
 
 .sidebar-header {
@@ -26,4 +27,17 @@
 
 .sidebar .nav-item:not(:last-child) {
   margin-bottom: 10px; /* Add margin-bottom between items */
+}
+
+.dashboard {
+  margin-left: 250px; /* Adjust margin to accommodate sidebar width */
+  padding: 20px; /* Add padding to content to avoid being hidden by sidebar */
+}
+
+.auth-wrapper {
+  margin-top: 20px; /* Add margin-top to separate from header */
+}
+
+.table {
+  margin-top: 20px; /* Add margin-top to separate from previous content */
 }
