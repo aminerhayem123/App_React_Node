@@ -30,7 +30,6 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Modify the /packs POST endpoint to accept item IDs
 app.post('/packs', async (req, res) => {
   const { brand, items } = req.body;
   if (!brand || !items) {
@@ -41,8 +40,8 @@ app.post('/packs', async (req, res) => {
     const result = await client.query('INSERT INTO packs (brand) VALUES ($1) RETURNING id', [brand]);
     const packId = result.rows[0].id;
 
-    const itemQueries = items.map(itemId => {
-      return client.query('INSERT INTO items (name, pack_id) VALUES ($1, $2)', [itemId, packId]);
+    const itemQueries = items.map(itemName => {
+      return client.query('INSERT INTO items (name, pack_id) VALUES ($1, $2)', [itemName, packId]);
     });
 
     await Promise.all(itemQueries);
@@ -92,7 +91,6 @@ app.get('/items', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');

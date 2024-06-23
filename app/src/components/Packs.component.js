@@ -9,7 +9,7 @@ const Packs = ({ handleLogout }) => {
   const [formData, setFormData] = useState({
     brand: '',
     numberOfItems: 1,
-    items: [{ name: '' }]
+    items: ['']
   });
 
   useEffect(() => {
@@ -42,7 +42,7 @@ const Packs = ({ handleLogout }) => {
       }));
     } else {
       const newItems = [...formData.items];
-      newItems[index].name = value;
+      newItems[index] = value;
       setFormData((prevData) => ({
         ...prevData,
         items: newItems
@@ -52,9 +52,7 @@ const Packs = ({ handleLogout }) => {
 
   const handleNumberOfItemsChange = (e) => {
     const numberOfItems = parseInt(e.target.value);
-    const newItems = Array.from({ length: numberOfItems }, (_, index) => ({
-      name: formData.items[index]?.name || ''
-    }));
+    const newItems = Array.from({ length: numberOfItems }, (_, index) => formData.items[index] || '');
 
     setFormData((prevData) => ({
       ...prevData,
@@ -85,16 +83,16 @@ const Packs = ({ handleLogout }) => {
       console.log(result);
   
       const newPack = {
-        id: new Date().getTime().toString(),
+        id: result.packId,
         brand: formData.brand,
-        items: formData.items,
+        items: formData.items.map(name => ({ name }))
       };
       setPacks((prevPacks) => [...prevPacks, newPack]);
       setShowForm(false);
       setFormData({
         brand: '',
         numberOfItems: 1,
-        items: [{ name: '' }],
+        items: [''],
       });
     } catch (error) {
       console.error('Error adding pack:', error);
@@ -134,7 +132,7 @@ const Packs = ({ handleLogout }) => {
                     <Form.Control
                       type="text"
                       placeholder="Enter item name"
-                      value={item.name}
+                      value={item}
                       onChange={(e) => handleInputChange(e, index)}
                     />
                   </Form.Group>
