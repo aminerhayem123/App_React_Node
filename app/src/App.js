@@ -7,7 +7,7 @@ import Packs from './components/packs.component';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(null); // Start with null to indicate loading state
 
   useEffect(() => {
     const loggedIn = localStorage.getItem('isLoggedIn');
@@ -41,6 +41,10 @@ function App() {
     setIsLoggedIn(false);
     localStorage.setItem('isLoggedIn', 'false');
   };
+
+  if (isLoggedIn === null) {
+    return <div>Loading...</div>; // Show a loading state until isLoggedIn is determined
+  }
 
   return (
     <Router>

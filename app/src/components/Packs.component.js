@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Table } from 'react-bootstrap';
 import Navigation from './Navigation';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -7,45 +7,98 @@ const Packs = ({ handleLogout }) => {
   const [showForm, setShowForm] = useState(false);
   const [packs, setPacks] = useState([]);
   const [formData, setFormData] = useState({
-    name: '',
-    items: '',
-    itemIds: '',
-    brand: ''
+    brand: '',
+    numberOfItems: 1,
+    items: [{ name: '' }]
   });
+
+  useEffect(() => {
+    fetchPacks();
+  }, []);
+
+  const fetchPacks = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/packs');
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      setPacks(data);
+    } catch (error) {
+      console.error('Error fetching packs:', error);
+    }
+  };
 
   const toggleForm = () => {
     setShowForm(!showForm);
   };
 
-  const generateId = () => {
-    return Math.floor(10000000 + Math.random() * 90000000).toString();
+  const handleInputChange = (e, index) => {
+    const { id, value } = e.target;
+    if (id === 'brand') {
+      setFormData((prevData) => ({
+        ...prevData,
+        brand: value
+      }));
+    } else {
+      const newItems = [...formData.items];
+      newItems[index].name = value;
+      setFormData((prevData) => ({
+        ...prevData,
+        items: newItems
+      }));
+    }
   };
 
-  const handleInputChange = (e) => {
-    const { id, value } = e.target;
+  const handleNumberOfItemsChange = (e) => {
+    const numberOfItems = parseInt(e.target.value);
+    const newItems = Array.from({ length: numberOfItems }, (_, index) => ({
+      name: formData.items[index]?.name || ''
+    }));
+
     setFormData((prevData) => ({
       ...prevData,
-      [id]: value
+      numberOfItems,
+      items: newItems
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newPack = {
-      id: generateId(),
-      name: formData.name,
-      items: formData.items,
-      itemIds: formData.itemIds,
-      brand: formData.brand
-    };
-    setPacks((prevPacks) => [...prevPacks, newPack]);
-    setShowForm(false);
-    setFormData({
-      name: '',
-      items: '',
-      itemIds: '',
-      brand: ''
-    });
+    try {
+      const response = await fetch('http://localhost:5000/packs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brand: formData.brand,
+          items: formData.items,
+        }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        throw new Error('Network response was not ok');
+      }
+      const result = await response.json();
+      console.log(result);
+  
+      const newPack = {
+        id: new Date().getTime().toString(),
+        brand: formData.brand,
+        items: formData.items,
+      };
+      setPacks((prevPacks) => [...prevPacks, newPack]);
+      setShowForm(false);
+      setFormData({
+        brand: '',
+        numberOfItems: 1,
+        items: [{ name: '' }],
+      });
+    } catch (error) {
+      console.error('Error adding pack:', error);
+    }
   };
 
   return (
@@ -57,42 +110,35 @@ const Packs = ({ handleLogout }) => {
             <Card.Body>
               <Card.Title>Add Pack</Card.Title>
               <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="name">
-                  <Form.Label>Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="items">
-                  <Form.Label>Items</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="Enter number of items"
-                    value={formData.items}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="itemIds">
-                  <Form.Label>Item IDs</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter item IDs"
-                    value={formData.itemIds}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
                 <Form.Group className="mb-3" controlId="brand">
                   <Form.Label>Brand</Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Enter brand"
                     value={formData.brand}
-                    onChange={handleInputChange}
+                    onChange={(e) => handleInputChange(e)}
                   />
                 </Form.Group>
+                <Form.Group className="mb-3" controlId="numberOfItems">
+                  <Form.Label>Number of Items</Form.Label>
+                  <Form.Control
+                    type="number"
+                    placeholder="Enter number of items"
+                    value={formData.numberOfItems}
+                    onChange={handleNumberOfItemsChange}
+                  />
+                </Form.Group>
+                {formData.items.map((item, index) => (
+                  <Form.Group className="mb-3" controlId={`item-${index}`} key={index}>
+                    <Form.Label>Item {index + 1}</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Enter item name"
+                      value={item.name}
+                      onChange={(e) => handleInputChange(e, index)}
+                    />
+                  </Form.Group>
+                ))}
                 <Button variant="primary" type="submit">
                   Submit
                 </Button>
@@ -110,23 +156,23 @@ const Packs = ({ handleLogout }) => {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Name</th>
-                  <th>Items</th>
-                  <th>Item IDs</th>
                   <th>Brand</th>
+                  <th>Items</th>
                 </tr>
               </thead>
               <tbody>
-                {packs.map((pack) => (
-                  <tr key={pack.id}>
-                    <td>{pack.id}</td>
-                    <td>{pack.name}</td>
-                    <td>{pack.items}</td>
-                    <td>{pack.itemIds}</td>
-                    <td>{pack.brand}</td>
-                  </tr>
-                ))}
-              </tbody>
+              {packs.map((pack) => (
+                <tr key={pack.id}>
+                  <td>{pack.id}</td>
+                  <td>{pack.brand}</td>
+                  <td>
+                    {pack.items && pack.items.map((item, index) => (
+                      <div key={index}>{item.name}</div>
+                    ))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
             </Table>
           </div>
         )}
