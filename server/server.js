@@ -37,11 +37,24 @@ app.post('/packs', async (req, res) => {
   }
   try {
     const client = await pool.connect();
-    const result = await client.query('INSERT INTO packs (brand) VALUES ($1) RETURNING id', [brand]);
-    const packId = result.rows[0].id;
 
-    const itemQueries = items.map(itemName => {
-      return client.query('INSERT INTO items (name, pack_id) VALUES ($1, $2)', [itemName, packId]);
+    // Generate a 3-letter uppercase random string
+    const randomLetters = [...Array(3)].map(() => String.fromCharCode(65 + Math.floor(Math.random() * 26))).join('');
+
+    // Generate a 5-digit random number
+    const randomNumber = Math.floor(10000 + Math.random() * 90000);
+
+    // Combine the random string and number to create the pack ID
+    const packId = `${randomLetters}${randomNumber}`;
+
+    // Insert the new pack with the generated ID
+    const result = await client.query('INSERT INTO packs (id, brand) VALUES ($1, $2) RETURNING id', [packId, brand]);
+    const insertedPackId = result.rows[0].id;
+
+    const itemQueries = items.map((itemName, index) => {
+      // Generate the item ID using the packId and the index
+      const itemId = `${packId}${String(index + 1).padStart(5, '0')}`;
+      return client.query('INSERT INTO items (id, name, pack_id) VALUES ($1, $2, $3)', [itemId, itemName, insertedPackId]);
     });
 
     await Promise.all(itemQueries);
@@ -54,6 +67,7 @@ app.post('/packs', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 app.get('/packs', async (req, res) => {
   try {
