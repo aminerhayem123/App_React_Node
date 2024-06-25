@@ -1,6 +1,5 @@
-// Items.js
 import React, { useState, useEffect } from 'react';
-import { Container, Table } from 'react-bootstrap';
+import { Container, Table, Button } from 'react-bootstrap';
 import Navigation from './Navigation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -24,6 +23,20 @@ function Items({ handleLogout }) {
     }
   };
 
+  const deleteItem = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:5000/items/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      setItems(items.filter(item => item.id !== id));
+    } catch (error) {
+      console.error('Error deleting item:', error);
+    }
+  };
+
   return (
     <div className="dashboard">
       <Navigation handleLogout={handleLogout} />
@@ -36,6 +49,7 @@ function Items({ handleLogout }) {
                 <th>ID</th>
                 <th>Name</th>
                 <th>Pack ID</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -44,6 +58,11 @@ function Items({ handleLogout }) {
                   <td>{item.id}</td>
                   <td>{item.name}</td>
                   <td>{item.pack_id}</td>
+                  <td>
+                    <Button variant="danger" onClick={() => deleteItem(item.id)}>
+                      Delete
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>

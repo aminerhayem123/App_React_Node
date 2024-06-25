@@ -92,6 +92,32 @@ app.get('/packs', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+app.post('/packs/:id/items', async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+
+  try {
+    const client = await pool.connect();
+
+    // Get the current number of items for the pack
+    const itemCountQuery = 'SELECT COUNT(*) FROM items WHERE pack_id = $1';
+    const itemCountResult = await client.query(itemCountQuery, [id]);
+    const itemCount = parseInt(itemCountResult.rows[0].count);
+
+    // Generate the item ID using the pack ID and the current item count
+    const itemId = `${id}${String(itemCount + 1).padStart(5, '0')}`;
+
+    const insertItemQuery = 'INSERT INTO items (id, name, pack_id) VALUES ($1, $2, $3) RETURNING *';
+    const result = await client.query(insertItemQuery, [itemId, name, id]);
+    const newItem = result.rows[0];
+    client.release();
+
+    res.status(201).json(newItem);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 app.get('/items', async (req, res) => {
   try {
@@ -102,6 +128,19 @@ app.get('/items', async (req, res) => {
     res.json(items);
   } catch (error) {
     console.error('Error fetching items:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/items/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const client = await pool.connect();
+    await client.query('DELETE FROM items WHERE id = $1', [id]);
+    client.release();
+    res.json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting item:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

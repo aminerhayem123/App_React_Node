@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Table } from 'react-bootstrap';
+import { Container, Card, Form, Button, Table, Modal } from 'react-bootstrap';
 import Navigation from './Navigation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -11,6 +11,9 @@ const Packs = ({ handleLogout }) => {
     numberOfItems: 1,
     items: ['']
   });
+  const [selectedPack, setSelectedPack] = useState(null);
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [newItem, setNewItem] = useState('');
 
   useEffect(() => {
     fetchPacks();
@@ -81,7 +84,7 @@ const Packs = ({ handleLogout }) => {
       }
       const result = await response.json();
       console.log(result);
-  
+
       const newPack = {
         id: result.packId,
         brand: formData.brand,
@@ -96,6 +99,42 @@ const Packs = ({ handleLogout }) => {
       });
     } catch (error) {
       console.error('Error adding pack:', error);
+    }
+  };
+
+  const handleAddItemClick = (pack) => {
+    setSelectedPack(pack);
+    setShowAddItemModal(true);
+  };
+
+  const handleAddItem = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/packs/${selectedPack.id}/items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newItem,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const result = await response.json();
+      setSelectedPack((prevPack) => ({
+        ...prevPack,
+        items: [...prevPack.items, result],
+      }));
+      setPacks((prevPacks) =>
+        prevPacks.map((pack) =>
+          pack.id === selectedPack.id ? { ...pack, items: [...pack.items, result] } : pack
+        )
+      );
+      setShowAddItemModal(false);
+      setNewItem('');
+    } catch (error) {
+      console.error('Error adding item:', error);
     }
   };
 
@@ -156,25 +195,56 @@ const Packs = ({ handleLogout }) => {
                   <th>ID</th>
                   <th>Brand</th>
                   <th>Items</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-              {packs.map((pack) => (
-                <tr key={pack.id}>
-                  <td>{pack.id}</td>
-                  <td>{pack.brand}</td>
-                  <td>
-                    {pack.items && pack.items.map((item, index) => (
-                      <div key={index}>{item.name}</div>
-                    ))}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                {packs.map((pack) => (
+                  <tr key={pack.id}>
+                    <td>{pack.id}</td>
+                    <td>{pack.brand}</td>
+                    <td>
+                      {pack.items && pack.items.map((item, index) => (
+                        <div key={index}>{item.name}</div>
+                      ))}
+                    </td>
+                    <td>
+                      <Button variant="secondary" onClick={() => handleAddItemClick(pack)}>
+                        Add Item
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
             </Table>
           </div>
         )}
       </Container>
+
+      <Modal show={showAddItemModal} onHide={() => setShowAddItemModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add Item to Pack</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group controlId="newItem">
+            <Form.Label>Item Name</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter item name"
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAddItemModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleAddItem}>
+            Add Item
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
