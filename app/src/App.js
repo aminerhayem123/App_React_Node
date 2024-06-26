@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/login.component';
 import Dashboard from './components/dashboard.component';
+import Packs from './components/Packs.component';
 import Items from './components/items.component';
-import Packs from './components/packs.component';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {

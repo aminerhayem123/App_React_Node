@@ -16,10 +16,11 @@ const Packs = ({ handleLogout }) => {
   const [newItem, setNewItem] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [refreshPage, setRefreshPage] = useState(false); // State to control page refresh
 
   useEffect(() => {
     fetchPacks();
-  }, []);
+  }, [refreshPage]); // Trigger fetchPacks when refreshPage changes
 
   const fetchPacks = async () => {
     setLoading(true);
@@ -94,6 +95,7 @@ const Packs = ({ handleLogout }) => {
         items: ['']
       });
       setShowForm(false);
+      setRefreshPage(prev => !prev); // Toggle refreshPage to trigger page refresh
     } catch (error) {
       console.error('Error adding pack:', error);
       setError('Failed to add pack.');
@@ -119,6 +121,7 @@ const Packs = ({ handleLogout }) => {
           items: pack.items.filter((item) => item.id !== id),
         }))
       );
+      setRefreshPage(prev => !prev); // Toggle refreshPage to trigger page refresh
     } catch (error) {
       console.error('Error deleting item:', error);
       setError('Failed to delete item.');
@@ -159,6 +162,7 @@ const Packs = ({ handleLogout }) => {
       );
       setShowAddItemModal(false);
       setNewItem('');
+      setRefreshPage(prev => !prev); // Toggle refreshPage to trigger page refresh
     } catch (error) {
       console.error('Error adding new item:', error);
       setError('Failed to add new item.');
