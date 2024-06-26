@@ -14,12 +14,15 @@ const Packs = ({ handleLogout }) => {
   const [selectedPack, setSelectedPack] = useState(null);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [newItem, setNewItem] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchPacks();
   }, []);
 
   const fetchPacks = async () => {
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:5000/packs');
       if (!response.ok) {
@@ -29,6 +32,9 @@ const Packs = ({ handleLogout }) => {
       setPacks(data);
     } catch (error) {
       console.error('Error fetching packs:', error);
+      setError('Failed to fetch packs.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,75 +72,98 @@ const Packs = ({ handleLogout }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const response = await fetch('http://localhost:5000/packs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          brand: formData.brand,
-          items: formData.items,
-        }),
+        body: JSON.stringify(formData),
       });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error('Network response was not ok');
-      }
-      const result = await response.json();
-      console.log(result);
 
-      const newPack = {
-        id: result.packId,
-        brand: formData.brand,
-        items: formData.items.map(name => ({ name }))
-      };
-      setPacks((prevPacks) => [...prevPacks, newPack]);
-      setShowForm(false);
+      if (!response.ok) {
+        throw new Error('Failed to add pack.');
+      }
+
+      const result = await response.json();
+      setPacks((prevPacks) => [...prevPacks, result]);
       setFormData({
         brand: '',
         numberOfItems: 1,
-        items: [''],
+        items: ['']
       });
+      setShowForm(false);
     } catch (error) {
       console.error('Error adding pack:', error);
+      setError('Failed to add pack.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleAddItemClick = (pack) => {
+  const handleDelete = async (id) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/items/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete item.');
+      }
+
+      setPacks((prevPacks) =>
+        prevPacks.map((pack) => ({
+          ...pack,
+          items: pack.items.filter((item) => item.id !== id),
+        }))
+      );
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      setError('Failed to delete item.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddItem = (pack) => {
     setSelectedPack(pack);
     setShowAddItemModal(true);
   };
 
-  const handleAddItem = async () => {
+  const handleAddNewItem = async () => {
+    if (!newItem.trim()) return;
+    setLoading(true);
     try {
       const response = await fetch(`http://localhost:5000/packs/${selectedPack.id}/items`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: newItem,
-        }),
+        body: JSON.stringify({ name: newItem }),
       });
+
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error('Failed to add item.');
       }
-      const result = await response.json();
-      setSelectedPack((prevPack) => ({
-        ...prevPack,
-        items: [...prevPack.items, result],
-      }));
+
+      const newItemData = await response.json();
       setPacks((prevPacks) =>
-        prevPacks.map((pack) =>
-          pack.id === selectedPack.id ? { ...pack, items: [...pack.items, result] } : pack
-        )
+        prevPacks.map((pack) => {
+          if (pack.id === selectedPack.id) {
+            return { ...pack, items: [...pack.items, newItemData] };
+          }
+          return pack;
+        })
       );
       setShowAddItemModal(false);
       setNewItem('');
     } catch (error) {
-      console.error('Error adding item:', error);
+      console.error('Error adding new item:', error);
+      setError('Failed to add new item.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,95 +171,104 @@ const Packs = ({ handleLogout }) => {
     <div className="dashboard">
       <Navigation handleLogout={handleLogout} />
       <Container>
-        {showForm ? (
+        <div className="content">
           <Card>
             <Card.Body>
-              <Card.Title>Add Pack</Card.Title>
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="brand">
-                  <Form.Label>Brand</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Enter brand"
-                    value={formData.brand}
-                    onChange={(e) => handleInputChange(e)}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3" controlId="numberOfItems">
-                  <Form.Label>Number of Items</Form.Label>
-                  <Form.Control
-                    type="number"
-                    placeholder="Enter number of items"
-                    value={formData.numberOfItems}
-                    onChange={handleNumberOfItemsChange}
-                  />
-                </Form.Group>
-                {formData.items.map((item, index) => (
-                  <Form.Group className="mb-3" controlId={`item-${index}`} key={index}>
-                    <Form.Label>Item {index + 1}</Form.Label>
+              <Card.Title>Packs Management</Card.Title>
+              {loading && <p>Loading...</p>}
+              {error && <p className="text-danger">{error}</p>}
+              <Button onClick={toggleForm}>
+                {showForm ? 'Hide Form' : 'Add New Pack'}
+              </Button>
+              {showForm && (
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group controlId="brand">
+                    <Form.Label>Brand</Form.Label>
                     <Form.Control
                       type="text"
-                      placeholder="Enter item name"
-                      value={item}
-                      onChange={(e) => handleInputChange(e, index)}
+                      value={formData.brand}
+                      onChange={handleInputChange}
                     />
                   </Form.Group>
-                ))}
-                <Button variant="primary" type="submit">
-                  Submit
-                </Button>
-                <Button variant="secondary" onClick={toggleForm} className="ml-2">
-                  Cancel
-                </Button>
-              </Form>
+                  <Form.Group controlId="numberOfItems">
+                    <Form.Label>Number of Items</Form.Label>
+                    <Form.Control
+                      type="number"
+                      value={formData.numberOfItems}
+                      onChange={handleNumberOfItemsChange}
+                      min="1"
+                    />
+                  </Form.Group>
+                  {formData.items.map((item, index) => (
+                    <Form.Group controlId={`item-${index}`} key={index}>
+                      <Form.Label>Item {index + 1}</Form.Label>
+                      <Form.Control
+                        type="text"
+                        value={item}
+                        onChange={(e) => handleInputChange(e, index)}
+                      />
+                    </Form.Group>
+                  ))}
+                  <Button type="submit" disabled={loading}>
+                    Submit
+                  </Button>
+                </Form>
+              )}
+              <Table striped bordered hover>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Brand</th>
+                    <th>Items</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {packs.map((pack) => (
+                    <tr key={pack.id}>
+                      <td>{pack.id}</td>
+                      <td>{pack.brand}</td>
+                      <td>
+                        <ul>
+                          {(pack.items || []).map((item) => (
+                            <li key={item.id}>
+                              {item.name}{' '}
+                              <Button
+                                variant="danger"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                Delete
+                              </Button>
+                            </li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td>
+                        <Button
+                          variant="primary"
+                          onClick={() => handleAddItem(pack)}
+                        >
+                          Add Item
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
             </Card.Body>
           </Card>
-        ) : (
-          <div>
-            <h2>Packs Page</h2>
-            <Button onClick={toggleForm} className="mb-3">Add Pack</Button>
-            <Table striped bordered hover>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Brand</th>
-                  <th>Items</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {packs.map((pack) => (
-                  <tr key={pack.id}>
-                    <td>{pack.id}</td>
-                    <td>{pack.brand}</td>
-                    <td>
-                      {pack.items && pack.items.map((item, index) => (
-                        <div key={index}>{item.name}</div>
-                      ))}
-                    </td>
-                    <td>
-                      <Button variant="secondary" onClick={() => handleAddItemClick(pack)}>
-                        Add Item
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          </div>
-        )}
+        </div>
       </Container>
 
       <Modal show={showAddItemModal} onHide={() => setShowAddItemModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Add Item to Pack</Modal.Title>
+          <Modal.Title>Add New Item</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group controlId="newItem">
             <Form.Label>Item Name</Form.Label>
             <Form.Control
               type="text"
-              placeholder="Enter item name"
               value={newItem}
               onChange={(e) => setNewItem(e.target.value)}
             />
@@ -238,9 +276,9 @@ const Packs = ({ handleLogout }) => {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowAddItemModal(false)}>
-            Cancel
+            Close
           </Button>
-          <Button variant="primary" onClick={handleAddItem}>
+          <Button variant="primary" onClick={handleAddNewItem} disabled={loading}>
             Add Item
           </Button>
         </Modal.Footer>
