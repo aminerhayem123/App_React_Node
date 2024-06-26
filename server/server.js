@@ -136,7 +136,25 @@ app.delete('/items/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const client = await pool.connect();
+    
+    // Get the pack_id of the item being deleted
+    const packIdQuery = 'SELECT pack_id FROM items WHERE id = $1';
+    const packIdResult = await client.query(packIdQuery, [id]);
+    const packId = packIdResult.rows[0].pack_id;
+
+    // Delete the item
     await client.query('DELETE FROM items WHERE id = $1', [id]);
+
+    // Check if there are any items left in the pack
+    const itemCountQuery = 'SELECT COUNT(*) FROM items WHERE pack_id = $1';
+    const itemCountResult = await client.query(itemCountQuery, [packId]);
+    const remainingItemCount = parseInt(itemCountResult.rows[0].count);
+
+    if (remainingItemCount === 0) {
+      // If no items are left, delete the pack
+      await client.query('DELETE FROM packs WHERE id = $1', [packId]);
+    }
+
     client.release();
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
@@ -144,6 +162,7 @@ app.delete('/items/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
