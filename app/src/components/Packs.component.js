@@ -181,14 +181,13 @@ const Packs = ({ handleLogout }) => {
       );
       setShowAddItemModal(false);
       setNewItem('');
-      setRefreshPage(prev => !prev);
     } catch (error) {
       console.error('Error adding new item:', error);
       setError('Failed to add new item.');
     } finally {
       setLoading(false);
     }
-  };
+  }; 
 
   const openViewImagesModal = (pack) => {
     setSelectedPack(pack);
