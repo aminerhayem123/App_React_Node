@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Table, Modal } from 'react-bootstrap';
+import { Container, Card, Form, Button, Table, Modal, Image } from 'react-bootstrap';
 import Navigation from './Navigation';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -9,18 +9,21 @@ const Packs = ({ handleLogout }) => {
   const [formData, setFormData] = useState({
     brand: '',
     numberOfItems: 1,
-    items: ['']
+    items: [''],
+    images: []
   });
   const [selectedPack, setSelectedPack] = useState(null);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [newItem, setNewItem] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [refreshPage, setRefreshPage] = useState(false); // State to control page refresh
+  const [refreshPage, setRefreshPage] = useState(false);
+  const [viewImagesModal, setViewImagesModal] = useState(false);
+  const [viewImages, setViewImages] = useState([]);
 
   useEffect(() => {
     fetchPacks();
-  }, [refreshPage]); // Trigger fetchPacks when refreshPage changes
+  }, [refreshPage]);
 
   const fetchPacks = async () => {
     setLoading(true);
@@ -71,16 +74,31 @@ const Packs = ({ handleLogout }) => {
     }));
   };
 
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setFormData((prevData) => ({
+      ...prevData,
+      images: files
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('brand', formData.brand);
+      formDataToSend.append('numberOfItems', formData.numberOfItems);
+      formData.items.forEach((item, index) => {
+        formDataToSend.append(`items[${index}]`, item);
+      });
+      formData.images.forEach((image, index) => {
+        formDataToSend.append(`images`, image);
+      });
+
       const response = await fetch('http://localhost:5000/packs', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+        body: formDataToSend,
       });
 
       if (!response.ok) {
@@ -92,10 +110,11 @@ const Packs = ({ handleLogout }) => {
       setFormData({
         brand: '',
         numberOfItems: 1,
-        items: ['']
+        items: [''],
+        images: []
       });
       setShowForm(false);
-      setRefreshPage(prev => !prev); // Toggle refreshPage to trigger page refresh
+      setRefreshPage(prev => !prev);
     } catch (error) {
       console.error('Error adding pack:', error);
       setError('Failed to add pack.');
@@ -121,7 +140,7 @@ const Packs = ({ handleLogout }) => {
           items: pack.items.filter((item) => item.id !== id),
         }))
       );
-      setRefreshPage(prev => !prev); // Toggle refreshPage to trigger page refresh
+      setRefreshPage(prev => !prev);
     } catch (error) {
       console.error('Error deleting item:', error);
       setError('Failed to delete item.');
@@ -162,13 +181,28 @@ const Packs = ({ handleLogout }) => {
       );
       setShowAddItemModal(false);
       setNewItem('');
-      setRefreshPage(prev => !prev); // Toggle refreshPage to trigger page refresh
+      setRefreshPage(prev => !prev);
     } catch (error) {
       console.error('Error adding new item:', error);
       setError('Failed to add new item.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const openViewImagesModal = (pack) => {
+    setSelectedPack(pack);
+    setViewImages(pack.images.map(image => ({
+      ...image,
+      url: `data:image/jpeg;base64,${image.data}`
+    })));
+    setViewImagesModal(true);
+  };
+
+  const closeViewImagesModal = () => {
+    setSelectedPack(null);
+    setViewImages([]);
+    setViewImagesModal(false);
   };
 
   return (
@@ -185,7 +219,7 @@ const Packs = ({ handleLogout }) => {
                 {showForm ? 'Hide Form' : 'Add New Pack'}
               </Button>
               {showForm && (
-                <Form onSubmit={handleSubmit}>
+                <Form onSubmit={handleSubmit} encType="multipart/form-data">
                   <Form.Group controlId="brand">
                     <Form.Label>Brand</Form.Label>
                     <Form.Control
@@ -213,6 +247,14 @@ const Packs = ({ handleLogout }) => {
                       />
                     </Form.Group>
                   ))}
+                  <Form.Group controlId="images">
+                    <Form.Label>Images</Form.Label>
+                    <Form.Control
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                    />
+                  </Form.Group>
                   <Button type="submit" disabled={loading}>
                     Submit
                   </Button>
@@ -234,7 +276,7 @@ const Packs = ({ handleLogout }) => {
                       <td>{pack.brand}</td>
                       <td>
                         <ul>
-                          {(pack.items || []).map((item) => (
+                          {(pack.items || []).map((item, index) => (
                             <li key={item.id}>
                               {item.name}{' '}
                               <Button
@@ -253,6 +295,12 @@ const Packs = ({ handleLogout }) => {
                           onClick={() => handleAddItem(pack)}
                         >
                           Add Item
+                        </Button>{' '}
+                        <Button
+                          variant="info"
+                          onClick={() => openViewImagesModal(pack)}
+                        >
+                          View Images
                         </Button>
                       </td>
                     </tr>
@@ -264,9 +312,12 @@ const Packs = ({ handleLogout }) => {
         </div>
       </Container>
 
-      <Modal show={showAddItemModal} onHide={() => setShowAddItemModal(false)}>
+      <Modal
+        show={showAddItemModal}
+        onHide={() => setShowAddItemModal(false)}
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Add New Item</Modal.Title>
+          <Modal.Title>Add Item to Pack</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group controlId="newItem">
@@ -279,11 +330,49 @@ const Packs = ({ handleLogout }) => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowAddItemModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowAddItemModal(false)}
+          >
             Close
           </Button>
-          <Button variant="primary" onClick={handleAddNewItem} disabled={loading}>
+          <Button
+            variant="primary"
+            onClick={handleAddNewItem}
+            disabled={loading}
+          >
             Add Item
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={viewImagesModal}
+        onHide={closeViewImagesModal}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            View Images of Pack {selectedPack ? selectedPack.id : ''}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Container>
+            {viewImages.map((image, index) => (
+              <div key={index} className="image-container">
+                <Image
+                  src={image.url}
+                  alt={`Item ${index}`}
+                  fluid
+                  style={{ maxWidth: '100%', maxHeight: '400px' }} // Adjust dimensions here
+                />
+              </div>
+            ))}
+          </Container>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={closeViewImagesModal}>
+            Close
           </Button>
         </Modal.Footer>
       </Modal>
