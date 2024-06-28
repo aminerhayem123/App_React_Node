@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Table, Modal, Image } from 'react-bootstrap';
+import { Container, Card, Form, Button, Table, Modal, Image, Row, Col } from 'react-bootstrap';
 import Navigation from './Navigation';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './Sidebar.css';
 
 const Packs = ({ handleLogout }) => {
   const [showForm, setShowForm] = useState(false);
@@ -289,16 +290,10 @@ const Packs = ({ handleLogout }) => {
                         </ul>
                       </td>
                       <td>
-                        <Button
-                          variant="primary"
-                          onClick={() => handleAddItem(pack)}
-                        >
+                        <Button onClick={() => handleAddItem(pack)}>
                           Add Item
-                        </Button>{' '}
-                        <Button
-                          variant="info"
-                          onClick={() => openViewImagesModal(pack)}
-                        >
+                        </Button>
+                        <Button onClick={() => openViewImagesModal(pack)}>
                           View Images
                         </Button>
                       </td>
@@ -310,17 +305,13 @@ const Packs = ({ handleLogout }) => {
           </Card>
         </div>
       </Container>
-
-      <Modal
-        show={showAddItemModal}
-        onHide={() => setShowAddItemModal(false)}
-      >
+      <Modal show={showAddItemModal} onHide={() => setShowAddItemModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Add Item to Pack</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form.Group controlId="newItem">
-            <Form.Label>Item Name</Form.Label>
+            <Form.Label>New Item</Form.Label>
             <Form.Control
               type="text"
               value={newItem}
@@ -329,45 +320,26 @@ const Packs = ({ handleLogout }) => {
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setShowAddItemModal(false)}
-          >
+          <Button variant="secondary" onClick={() => setShowAddItemModal(false)}>
             Close
           </Button>
-          <Button
-            variant="primary"
-            onClick={handleAddNewItem}
-            disabled={loading}
-          >
+          <Button variant="primary" onClick={handleAddNewItem}>
             Add Item
           </Button>
         </Modal.Footer>
       </Modal>
-
-      <Modal
-        show={viewImagesModal}
-        onHide={closeViewImagesModal}
-        size="lg"
-      >
+      <Modal show={viewImagesModal} onHide={closeViewImagesModal}>
         <Modal.Header closeButton>
-          <Modal.Title>
-            View Images of Pack {selectedPack ? selectedPack.id : ''}
-          </Modal.Title>
+          <Modal.Title>View Images</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Container>
+          <Row>
             {viewImages.map((image, index) => (
-              <div key={index} className="image-container">
-                <Image
-                  src={image.url}
-                  alt={`Item ${index}`}
-                  fluid
-                  style={{ maxWidth: '100%', maxHeight: '400px' }} // Adjust dimensions here
-                />
-              </div>
+              <Col xs={12} sm={4} key={index}>
+                <Image src={image.url} thumbnail className="img-grid" />
+              </Col>
             ))}
-          </Container>
+          </Row>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={closeViewImagesModal}>
