@@ -238,9 +238,10 @@ const Packs = ({ handleLogout }) => {
       // Clear selected images after deletion
       setSelectedImages([]);
   
-      // Close and then reopen the modal to force a re-render
+      // Close the modal
       closeViewImagesModal();
-      openViewImagesModal(selectedPack); // Assuming selectedPack is already set
+      // Optionally, refresh the packs data to update other components that display pack information
+      setRefreshPage(prev => !prev); // Example to trigger refresh
   
     } catch (error) {
       console.error('Error deleting images:', error);
