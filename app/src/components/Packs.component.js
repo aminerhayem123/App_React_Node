@@ -20,6 +20,7 @@ const Packs = ({ handleLogout }) => {
   const [error, setError] = useState('');
   const [refreshPage, setRefreshPage] = useState(false);
   const [viewImagesModal, setViewImagesModal] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [viewImages, setViewImages] = useState([]);
 
   useEffect(() => {
@@ -205,6 +206,50 @@ const Packs = ({ handleLogout }) => {
     setViewImagesModal(false);
   };
 
+  const handleImageSelection = (imageId, isSelected) => {
+    setSelectedImages((prevSelected) => {
+      if (isSelected) {
+        return [...prevSelected, imageId];
+      } else {
+        return prevSelected.filter((id) => id !== imageId);
+      }
+    });
+  };
+  const handleDeleteSelectedImages = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/images/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ imageIds: selectedImages }),
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to delete images.');
+      }
+  
+      // Update viewImages state to reflect deleted images
+      setViewImages((prevImages) =>
+        prevImages.filter((image) => !selectedImages.includes(image.id))
+      );
+  
+      // Clear selected images after deletion
+      setSelectedImages([]);
+  
+      // Close and then reopen the modal to force a re-render
+      closeViewImagesModal();
+      openViewImagesModal(selectedPack); // Assuming selectedPack is already set
+  
+    } catch (error) {
+      console.error('Error deleting images:', error);
+      setError('Failed to delete images.');
+    } finally {
+      setLoading(false);
+    }
+  };  
+
   return (
     <div className="dashboard">
       <Navigation handleLogout={handleLogout} />
@@ -329,24 +374,33 @@ const Packs = ({ handleLogout }) => {
         </Modal.Footer>
       </Modal>
       <Modal show={viewImagesModal} onHide={closeViewImagesModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>View Images</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Row>
-            {viewImages.map((image, index) => (
-              <Col xs={12} sm={4} key={index}>
-                <Image src={image.url} thumbnail className="img-grid" />
-              </Col>
-            ))}
-          </Row>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={closeViewImagesModal}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+  <Modal.Header closeButton>
+    <Modal.Title>View Images</Modal.Title>
+  </Modal.Header>
+  <Modal.Body>
+    <Row>
+      {viewImages.map((image, index) => (
+        <Col xs={12} sm={4} key={index}>
+          <Image src={image.url} thumbnail className="img-grid" />
+          <Form.Check 
+            type="checkbox" 
+            label="Select" 
+            onChange={(e) => handleImageSelection(image.id, e.target.checked)} 
+          />
+        </Col>
+      ))}
+    </Row>
+  </Modal.Body>
+  <Modal.Footer>
+    <Button variant="danger" onClick={handleDeleteSelectedImages}>
+      Delete Selected Images
+    </Button>
+    <Button variant="secondary" onClick={closeViewImagesModal}>
+      Close
+    </Button>
+  </Modal.Footer>
+</Modal>
+
     </div>
   );
 };

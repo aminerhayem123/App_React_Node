@@ -218,6 +218,25 @@ app.delete('/items/:id', async (req, res) => {
   }
 });
 
+app.delete('/images/delete', async (req, res) => {
+  const { imageIds } = req.body;
+
+  if (!Array.isArray(imageIds) || imageIds.length === 0) {
+    return res.status(400).json({ message: 'Invalid image IDs.' });
+  }
+
+  try {
+    const client = await pool.connect();
+    const deleteImagesQuery = 'DELETE FROM images WHERE id = ANY($1::int[])';
+    const result = await client.query(deleteImagesQuery, [imageIds]);
+    client.release();
+
+    res.json({ message: 'Images deleted successfully', deletedCount: result.rowCount });
+  } catch (err) {
+    console.error('Error deleting images:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
